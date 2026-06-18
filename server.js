@@ -1,12 +1,16 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const Database = require("better-sqlite3");
 const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const db = new Database(path.join(__dirname, "data", "teams.db"));
+const dataDir = path.join(__dirname, "data");
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+const db = new Database(path.join(dataDir, "teams.db"));
 
 db.pragma("journal_mode = WAL");
 

@@ -86,6 +86,9 @@ function capitalizeWords(str) {
 
 function updateCalculatedStats(slot) {
     const pokemonId = slot.querySelector('.species-dropdown').value;
+    const pokemon = pokemonData.find(poke => poke.id === pokemonId);
+    if (!pokemon) return;
+
     const level = parseInt(slot.querySelector('.level-input').value);
     const nature = slot.querySelector('.nature-dropdown').value;
     const ivInputs = slot.querySelectorAll('.ivs input');
@@ -102,14 +105,14 @@ function updateCalculatedStats(slot) {
         speed: 1
     };
 
-    if (natureData.increasedStat !== "None") {
+    if (natureData && natureData.increasedStat !== "None") {
         natureMultiplier[natureData.increasedStat] = 1.1;
     }
-    if (natureData.decreasedStat !== "None") {
+    if (natureData && natureData.decreasedStat !== "None") {
         natureMultiplier[natureData.decreasedStat] = 0.9;
     }
 
-    const baseStats = pokemonData.find(poke => poke.id === pokemonId).baseStats;
+    const baseStats = pokemon.baseStats;
     const stats = ['hp', 'attack', 'defense', 'specialAttack', 'specialDefense', 'speed'];
 
     stats.forEach((stat, index) => {
@@ -162,27 +165,42 @@ function updateTypeMove4(slot, types) {
 function updatePokemonImage(slot, selectedPokemonId) {
 
     const pokemonImage = slot.querySelector('.pokemon-image');
-    pokemonImage.crossOrigin = "anonymous";
+    const numericId = parseInt(selectedPokemonId, 10);
 
     if (slot.querySelector('.alpha-checkbox').checked) {
         pokemonImage.onload = function () {
             addRedOutline(pokemonImage);
         };
+        pokemonImage.onerror = function () {
+            pokemonImage.onerror = null;
+        };
     } else {
         pokemonImage.onload = null;
+        pokemonImage.onerror = null;
+    }
+
+    if (numericId === 0) {
+        pokemonImage.src = '';
+        return;
     }
 
     if (slot.querySelector('.shiny-checkbox').checked) {
-        pokemonImage.src = `img/shiny/${selectedPokemonId}.png`;
+        pokemonImage.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${numericId}.png`;
     } else {
-        pokemonImage.src = `img/pokemon/${selectedPokemonId}.png`;
+        pokemonImage.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${numericId}.png`;
     }
 
 }
 
 function updateItemImage(slot, selectedItemId) {
     const itemImage = slot.querySelector('.item-icon');
-    itemImage.src = `img/items/${selectedItemId}.png`;
+    const item = itemsData.find(i => i.id === selectedItemId);
+    if (item && item.name !== 'Select an Item') {
+        const spriteName = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        itemImage.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${spriteName}.png`;
+    } else {
+        itemImage.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+    }
 }
 
 function validateIVInput(input) {
@@ -270,7 +288,7 @@ function createPokemonSlotStructure() {
     return `
     <div class="left-section">
         <select class="species-dropdown"></select>
-        <img src="https://placehold.co/96x96" alt="Pokemon Image" class="pokemon-image">
+        <img src="" alt="Pokemon Image" class="pokemon-image" style="width:96px;height:96px;">
         <div class="type-label-container">
             <div class="type-label" data-type="type1">Type1</div>
             <div class="type-label" data-type="type2">Type2</div>
@@ -290,7 +308,7 @@ function createPokemonSlotStructure() {
         </div>
         <table class="pokemon-attributes-table">
             <tr>
-                <td><img src="https://placehold.co/30x30" alt="Item Image" class="item-icon"></td>
+                <td><img src="" alt="Item Image" class="item-icon"></td>
                 <td>
                     <select class="item-dropdown">
                     </select>
@@ -410,7 +428,9 @@ function createPokemonSlotStructure() {
 }
 
 function updateBaseStats(slot, pokemonId) {
-    const baseStats = pokemonData.find(poke => poke.id === pokemonId).baseStats;
+    const pokemon = pokemonData.find(poke => poke.id === pokemonId);
+    if (!pokemon) return;
+    const baseStats = pokemon.baseStats;
     const baseStatElements = slot.querySelectorAll('.base-stats span');
 
     const stats = [baseStats.hp, baseStats.attack, baseStats.defense, baseStats.specialAttack, baseStats.specialDefense, baseStats.speed];
@@ -623,9 +643,10 @@ function createPokemonSlot() {
 
     populateNatureDropdown(natureDropdown);
     populateItemDropdown(itemDropdown);
+    const initialPokemonId = dropdown.value || '000';
+    const initialPokemon = pokemonData.find(poke => poke.id === initialPokemonId) || pokemonData[0];
     updateItemImage(slot, itemDropdown.value);
-    updateBaseStats(slot, dropdown.value);
-    const initialPokemon = pokemonData.find(poke => poke.id === dropdown.value);
+    updateBaseStats(slot, initialPokemon.id);
     updateTypeDisplay(slot, initialPokemon.type);
     updatePokemonImage(slot, initialPokemon.id);
     populateAbilityDropdown(abilityDropdown, initialPokemon.id)
