@@ -1,5 +1,25 @@
 const container = document.getElementById("pokemonContainer");
 
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'flex'; document.body.classList.add('modal-open'); }
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; document.body.classList.remove('modal-open'); }
+}
+
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
+    if (e.target.hasAttribute('data-dismiss') && e.target.getAttribute('data-dismiss') === 'modal') {
+        const overlay = e.target.closest('.modal-overlay');
+        if (overlay) { overlay.style.display = 'none'; document.body.classList.remove('modal-open'); }
+    }
+});
+
 function populateDropdown(dropdown) {
     pokemonData.forEach(poke => {
         const option = document.createElement("option");
@@ -638,6 +658,11 @@ function createPokemonSlot() {
 
     slot.querySelector('.alpha-checkbox').addEventListener('change', function () {
         const selectedPokemon = pokemonData.find(poke => poke.id === dropdown.value);
+        if (this.checked) {
+            slot.classList.add('alpha-slot');
+        } else {
+            slot.classList.remove('alpha-slot');
+        }
         updatePokemonImage(slot, selectedPokemon.id);
     });
 
@@ -1003,8 +1028,10 @@ function loadTeamData(data) {
 
             if (pokemon.alpha === "Yes") {
                 slot.querySelector('.alpha-checkbox').checked = true;
+                slot.classList.add('alpha-slot');
             } else {
                 slot.querySelector('.alpha-checkbox').checked = false;
+                slot.classList.remove('alpha-slot');
             }
 
             if (pokemon.shiny === "Yes") {
@@ -1069,8 +1096,7 @@ initializePokemonSlots();
 
 $(document).ready(function () {
     $("#importTeam").click(function () {
-        // Show the custom modal
-        $('#importShowdownPrompt').modal('show');
+        openModal('importShowdownPrompt');
     });
 
     $("#submitimportShowdownPrompt").click(function () {
@@ -1081,7 +1107,7 @@ $(document).ready(function () {
             // console.log(teamData);
             loadTeamData(teamData);
         }
-        $('#importShowdownPrompt').modal('hide');
+        closeModal('importShowdownPrompt');
         $("#teamName").val('');
 
         // Clear the input
@@ -1092,7 +1118,7 @@ $(document).ready(function () {
     $("#exportTeam").click(function () {
         const exportData = getCurrentTeamShowdownFormat();
         $('#exportOutput').val(exportData);
-        $('#exportModal').modal('show');
+        openModal('exportModal');
     });
 
     // Save current team to database
@@ -1191,7 +1217,7 @@ $(document).ready(function () {
     });
 
     $('body').on('click', '[data-target="#creditsModal"]', function () {
-        $('#creditsModal').modal('show');
+        openModal('creditsModal');
     });
 
 });
